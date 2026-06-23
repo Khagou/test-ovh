@@ -1,0 +1,40 @@
+name: Terraform
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_ovh_application_key: ${{ secrets.OVH_APPLICATION_KEY }}
+      TF_VAR_ovh_application_secret: ${{ secrets.OVH_APPLICATION_SECRET }}
+      TF_VAR_ovh_consumer_key: ${{ secrets.OVH_CONSUMER_KEY }}
+      TF_VAR_service_name: ${{ secrets.OVH_SERVICE_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -no-color -auto-approve tfplan
