@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    ovh = {
+      source  = "ovh/ovh"
+      version = "~> 0.46"
+    }
+  }
+}
+
 resource "ovh_cloud_project_containerregistry" "this" {
   service_name = var.service_name
   name         = var.name
