@@ -1,18 +1,3 @@
-variable "ovh_application_key" {
-  type      = string
-  sensitive = true
-}
-
-variable "ovh_application_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "ovh_consumer_key" {
-  type      = string
-  sensitive = true
-}
-
 variable "service_name" {
   type        = string
   description = "ID du projet OVH Public Cloud (visible dans l'URL du manager : /public-cloud/pci/projects/<ID>)"
