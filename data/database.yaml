@@ -1,0 +1,6 @@
+databases:
+  - name: postgresql
+    engine: postgresql
+    version: "16"
+    plan: essential
+    flavor: db1-4

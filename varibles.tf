@@ -16,20 +16,5 @@ variable "service_name" {
 variable "region" {
   type        = string
   default     = "GRA9"
-  description = "Région OVH Public Cloud"
-}
-
-variable "cluster_name" {
-  type    = string
-  default = "my-kube-cluster"
-}
-
-variable "node_pool_min_nodes" {
-  type    = number
-  default = 1
-}
-
-variable "node_pool_max_nodes" {
-  type    = number
-  default = 3
+  description = "Région OVH Public Cloud (ex: GRA9, SBG5)"
 }
