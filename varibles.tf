@@ -1,14 +1,9 @@
-variable "ovh_application_key" {
+variable "ovh_client_id" {
   type      = string
   sensitive = true
 }
 
-variable "ovh_application_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "ovh_consumer_key" {
+variable "ovh_client_secret" {
   type      = string
   sensitive = true
 }
