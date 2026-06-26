@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    ovh = {
+      source  = "ovh/ovh"
+      version = "~> 0.46"
+    }
+  }
+}
+
 data "ovh_cloud_project_containerregistry_capabilities" "this" {
   service_name = var.service_name
   region_name  = var.region
