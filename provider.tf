@@ -9,10 +9,10 @@ terraform {
   backend "s3" {
     bucket = "test-tfstate"   # nom de ton bucket OVH Object Storage
     key    = "ovh/terraform.tfstate"
-    region = "gra"       # adapte à ta région (gra, sbg, bhs…)
+    region = "eu-west-par"
 
     endpoints = {
-      s3 = "https://s3.eu-west-par.io.cloud.ovh.net/"  # endpoint S3 OVH de ta région
+      s3 = "https://s3.eu-west-par.io.cloud.ovh.net"
     }
 
     # Credentials S3 de l'OpenStack user créé pour le bucket
