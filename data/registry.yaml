@@ -1,3 +1,5 @@
 registries:
   - name: registry
-    plan: SMALL
+    # Récupérer les plan_id via :
+    # GET https://api.ovh.com/v1/cloud/project/{service_name}/capabilities/containerRegistry
+    plan_id: "REPLACE_WITH_PLAN_ID"

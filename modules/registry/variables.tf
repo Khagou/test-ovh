@@ -12,8 +12,7 @@ variable "name" {
   default = "registry"
 }
 
-variable "plan" {
+variable "plan_id" {
   type        = string
-  default     = "SMALL"
-  description = "Plan OVH Registry : SMALL (5GB), MEDIUM (100GB), LARGE (unlimited)"
+  description = "ID du plan OVH Registry — GET /cloud/project/{id}/capabilities/containerRegistry"
 }
