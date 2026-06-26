@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TF_VAR_ovh_application_key: ${{ secrets.OVH_APPLICATION_KEY }}
-      TF_VAR_ovh_application_secret: ${{ secrets.OVH_APPLICATION_SECRET }}
-      TF_VAR_ovh_consumer_key: ${{ secrets.OVH_CONSUMER_KEY }}
-      TF_VAR_service_name: ${{ secrets.OVH_SERVICE_NAME }}
+
+      # Credentials S3 de l'OpenStack user pour le backend tfstate
+      AWS_ACCESS_KEY_ID: ${{ secrets.OVH_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.OVH_S3_SECRET_KEY }}
 
     steps:
       - name: Checkout
