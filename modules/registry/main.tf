@@ -7,14 +7,13 @@ terraform {
   }
 }
 
-data "ovh_cloud_project_containerregistry_capabilities" "this" {
+data "ovh_cloud_project_capabilities_containerregistry" "this" {
   service_name = var.service_name
-  region_name  = var.region
 }
 
 locals {
   plan = [
-    for p in data.ovh_cloud_project_containerregistry_capabilities.this.plans :
+    for p in data.ovh_cloud_project_capabilities_containerregistry.this.plans :
     p if p.name == var.plan
   ][0]
 }
