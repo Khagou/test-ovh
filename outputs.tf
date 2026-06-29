@@ -20,6 +20,10 @@ output "database_endpoints" {
   sensitive = true
 }
 
-# output "registry_urls" {
-#   value = { for k, v in module.registry : k => v.url }
-# }
+output "registry_urls" {
+  value = { for k, v in module.registry : k => v.url }
+}
+output "password" {
+  value     = { for k, v in module.registry : k => v.password }
+  sensitive = true
+}
