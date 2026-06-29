@@ -6,6 +6,12 @@ locals {
   database   = yamldecode(file("${path.module}/data/database.yaml"))
   registry   = yamldecode(file("${path.module}/data/registry.yaml"))
   app        = yamldecode(file("${path.module}/data/app.yaml"))
+
+  # Parsing du kubeconfig pour configurer le provider Kubernetes.
+  # La valeur est "unknown" lors de terraform validate (cluster pas encore créé),
+  # ce qui est acceptable — Terraform vérifie le schéma, pas les valeurs.
+  _kube_raw = module.kubernetes["kube-cluster"].kubeconfig
+  _kube     = yamldecode(local._kube_raw)
 }
 
 module "network" {

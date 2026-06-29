@@ -33,9 +33,12 @@ provider "ovh" {
   client_secret = var.ovh_client_secret
 }
 
-# Le kubeconfig est produit par le module kubernetes après création du cluster.
+# Le kubeconfig est parsé depuis le module kubernetes (disponible après le premier apply -target).
 # Premier apply : terraform apply -target=module.network -target=module.kubernetes -target=module.registry -target=module.database
 # Deuxième apply : terraform apply  (déploie l'app via ce provider)
 provider "kubernetes" {
-  config_raw = module.kubernetes["kube-cluster"].kubeconfig
+  host                   = local._kube.clusters[0].cluster.server
+  cluster_ca_certificate = base64decode(local._kube.clusters[0].cluster["certificate-authority-data"])
+  client_certificate     = base64decode(local._kube.users[0].user["client-certificate-data"])
+  client_key             = base64decode(local._kube.users[0].user["client-key-data"])
 }
