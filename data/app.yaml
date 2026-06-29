@@ -1,0 +1,4 @@
+name: myapp
+replicas: 2
+port: 80
+harbor_project: library

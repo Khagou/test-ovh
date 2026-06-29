@@ -1,0 +1,22 @@
+Compte de service OVH:
+1.Créer un compte de service et son secret:
+    ovhcloud me api oauth2 client create \
+  --flow CLIENT_CREDENTIALS \
+  --name terraform \
+  --description "Terraform Service Account" \
+  --callback-urls '[]'
+2. Récupérer le client id et le client secret et passer les valeurs dans les variables:
+    ovh_client_id
+    ovh_client_secret
+
+Registry:
+1.récupérer l'URL
+2.Terraform output pour récup user et password
+3.Le user permet de se co via docker et à l'interface harbor dans la console OVH
+
+Bucket:
+1.Need un user OVH
+2.Récupérer la clé d'accès et la clé secrète à la création du user
+3.Passer les clés récupérées dans les variables:
+    AWS_ACCESS_KEY_ID="clé d'accès"
+    AWS_SECRET_ACCESS_KEY="clé secrète"

@@ -5,6 +5,13 @@ locals {
   kubernetes = yamldecode(file("${path.module}/data/kubernetes.yaml"))
   database   = yamldecode(file("${path.module}/data/database.yaml"))
   registry   = yamldecode(file("${path.module}/data/registry.yaml"))
+  app        = yamldecode(file("${path.module}/data/app.yaml"))
+
+  # Parsing du kubeconfig pour configurer le provider Kubernetes.
+  # La valeur est "unknown" lors de terraform validate (cluster pas encore créé),
+  # ce qui est acceptable — Terraform vérifie le schéma, pas les valeurs.
+  _kube_raw = module.kubernetes["kube-cluster"].kubeconfig
+  _kube     = yamldecode(local._kube_raw)
 }
 
 module "network" {
@@ -49,4 +56,18 @@ module "registry" {
   service_name  = var.service_name
   region        = local.region_short
   registry_name = each.value.name
+}
+
+module "app" {
+  source = "./modules/app"
+
+  app_name          = local.app.name
+  image             = "${module.registry["registry"].url}/${local.app.harbor_project}/${local.app.name}:latest"
+  replicas          = local.app.replicas
+  port              = local.app.port
+  registry_url      = module.registry["registry"].url
+  registry_username = module.registry["registry"].user
+  registry_password = module.registry["registry"].password
+
+  depends_on = [module.kubernetes]
 }

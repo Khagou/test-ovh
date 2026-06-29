@@ -4,6 +4,10 @@ terraform {
       source  = "ovh/ovh"
       version = "~> 0.46"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
 
   backend "s3" {
@@ -27,4 +31,14 @@ provider "ovh" {
   endpoint      = "ovh-eu"
   client_id     = var.ovh_client_id
   client_secret = var.ovh_client_secret
+}
+
+# Le kubeconfig est parsé depuis le module kubernetes (disponible après le premier apply -target).
+# Premier apply : terraform apply -target=module.network -target=module.kubernetes -target=module.registry -target=module.database
+# Deuxième apply : terraform apply  (déploie l'app via ce provider)
+provider "kubernetes" {
+  host                   = local._kube.clusters[0].cluster.server
+  cluster_ca_certificate = base64decode(local._kube.clusters[0].cluster["certificate-authority-data"])
+  client_certificate     = base64decode(local._kube.users[0].user["client-certificate-data"])
+  client_key             = base64decode(local._kube.users[0].user["client-key-data"])
 }

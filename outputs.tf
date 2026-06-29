@@ -23,7 +23,34 @@ output "database_endpoints" {
 output "registry_urls" {
   value = { for k, v in module.registry : k => v.url }
 }
-output "password" {
+
+output "registry_users" {
+  value = { for k, v in module.registry : k => v.user }
+}
+
+output "registry_passwords" {
   value     = { for k, v in module.registry : k => v.password }
   sensitive = true
+}
+
+# Outputs singuliers pour le registry "registry" (utilisés par le workflow CI)
+output "registry_url" {
+  value       = module.registry["registry"].url
+  description = "URL du Container Registry OVH"
+}
+
+output "registry_login" {
+  value       = module.registry["registry"].user
+  description = "Login du CI user sur le registry"
+}
+
+output "registry_password" {
+  value       = module.registry["registry"].password
+  sensitive   = true
+  description = "Mot de passe du CI user sur le registry"
+}
+
+output "app_url" {
+  value       = "http://${module.app.load_balancer_ip}"
+  description = "URL publique de l'application déployée sur Kubernetes"
 }
