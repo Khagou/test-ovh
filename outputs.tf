@@ -23,7 +23,13 @@ output "database_endpoints" {
 output "registry_urls" {
   value = { for k, v in module.registry : k => v.url }
 }
+)
 output "password" {
   value     = { for k, v in module.registry : k => v.password }
   sensitive = true
 }
+
+output "user" {
+  value     = { for k, v in module.registry : k => v.login }
+}
+

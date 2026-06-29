@@ -5,7 +5,12 @@ output "id" {
 output "url" {
   value = ovh_cloud_project_containerregistry.registry.url
 }
+
 output "password" {
   value     = ovh_cloud_project_containerregistry_user.ci_user.password
   sensitive = true
+}
+
+output "user" {
+  value     = ovh_cloud_project_containerregistry_user.ci_user.login
 }
