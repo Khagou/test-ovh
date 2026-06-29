@@ -7,12 +7,13 @@ variable "region" {
   description = "Région courte (ex: GRA, SBG) — format OVH Registry"
 }
 
-variable "name" {
+variable "registry_name" {
   type    = string
   default = "registry"
 }
 
-variable "plan_id" {
-  type        = string
-  description = "ID du plan OVH Registry — GET /cloud/project/{id}/capabilities/containerRegistry"
+variable "registry_plan" {
+  type = string
+  description = "Taille du registry"
+  default = "SMALL"
 }
