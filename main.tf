@@ -43,10 +43,10 @@ module "database" {
 }
 
 module "registry" {
- for_each = { for r in local.registry.registries : r.name => r }
+  for_each = { for r in local.registry.registries : r.name => r }
 
- source                = "./modules/registry"
- service_name          = var.service_name
- region                = local.region_short
- registry_name         = each.value.name
+  source        = "./modules/registry"
+  service_name  = var.service_name
+  region        = local.region_short
+  registry_name = each.value.name
 }
