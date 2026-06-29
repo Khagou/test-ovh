@@ -8,5 +8,4 @@ output "url" {
 output "password" {
   value = ovh_cloud_project_containerregistry_user.ci_user.password
   sensitive = true
-
 }
