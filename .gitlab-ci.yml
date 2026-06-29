@@ -14,12 +14,19 @@ variables:
   AWS_ACCESS_KEY_ID:        $OVH_S3_ACCESS_KEY
   AWS_SECRET_ACCESS_KEY:    $OVH_S3_SECRET_KEY
 
+# L'image hashicorp/terraform a ENTRYPOINT=terraform.
+# GitLab CI essaie de lancer /bin/sh → ça donne "terraform sh" → erreur.
+# entrypoint: [""] force le shell standard à la place.
+.terraform-image: &terraform-image
+  name: hashicorp/terraform:latest
+  entrypoint: [""]
+
 # ─── VALIDATE ─────────────────────────────────────────────────────────────────
 # Tourne sur toutes les branches : vérifie la syntaxe et le schéma Terraform.
 
 terraform-validate:
   stage: validate
-  image: hashicorp/terraform:latest
+  image: *terraform-image
   script:
     - terraform init
     - terraform fmt -check
@@ -32,7 +39,7 @@ terraform-validate:
 
 terraform-infra:
   stage: infra
-  image: hashicorp/terraform:latest
+  image: *terraform-image
   script:
     - terraform init
     - |
@@ -52,7 +59,7 @@ terraform-infra:
 
 docker-build:
   stage: docker
-  image: hashicorp/terraform:latest
+  image: *terraform-image
   services:
     - name: docker:dind
       alias: docker
@@ -83,7 +90,7 @@ docker-build:
 
 terraform-deploy:
   stage: deploy
-  image: hashicorp/terraform:latest
+  image: *terraform-image
   script:
     - terraform init
     - terraform plan -no-color -out=tfplan
