@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    ovh = {
-      source  = "ovh/ovh"
-      version = "~> 0.46"
-    }
-  }
-}
-
 data "ovh_cloud_project_capabilities_containerregistry_filter" "regcap" {
   service_name = var.service_name
   plan_name    = var.registry_plan
