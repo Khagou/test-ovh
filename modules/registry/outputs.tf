@@ -1,7 +1,7 @@
 output "id" {
-  value = ovh_cloud_project_containerregistry.this.id
+  value = ovh_cloud_project_containerregistry.registry.id
 }
 
 output "url" {
-  value = ovh_cloud_project_containerregistry.this.url
+  value = ovh_cloud_project_containerregistry.registry.url
 }
