@@ -83,17 +83,21 @@ jobs:
           REGISTRY_USER=$(terraform output -raw registry_login)
           REGISTRY_PASSWORD=$(terraform output -raw registry_password)
 
+          # Supprimer le schéma https:// — Docker n'accepte pas de protocole dans les tags/registry
+          REGISTRY_HOST="${REGISTRY_URL#https://}"
+          REGISTRY_HOST="${REGISTRY_HOST#http://}"
+
           # Masquer le mot de passe dans les logs
           echo "::add-mask::$REGISTRY_PASSWORD"
 
-          echo "url=$REGISTRY_URL"        >> "$GITHUB_OUTPUT"
-          echo "user=$REGISTRY_USER"      >> "$GITHUB_OUTPUT"
+          echo "host=$REGISTRY_HOST"         >> "$GITHUB_OUTPUT"
+          echo "user=$REGISTRY_USER"         >> "$GITHUB_OUTPUT"
           echo "password=$REGISTRY_PASSWORD" >> "$GITHUB_OUTPUT"
 
       - name: Docker Login
         uses: docker/login-action@v3
         with:
-          registry: ${{ steps.registry.outputs.url }}
+          registry: ${{ steps.registry.outputs.host }}
           username: ${{ steps.registry.outputs.user }}
           password: ${{ steps.registry.outputs.password }}
 
@@ -102,7 +106,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.registry.outputs.url }}/library/myapp:latest
+          tags: ${{ steps.registry.outputs.host }}/library/myapp:latest
 
   # ──────────────────────────────────────────────────────────────────────────
   # Job 3 : Déploie l'application sur Kubernetes via le provider Terraform.
