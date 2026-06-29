@@ -10,9 +10,9 @@ resource "ovh_cloud_project_containerregistry" "registry" {
   name         = var.registry_name
 }
 
-# resource "ovh_cloud_project_containerregistry_user" "ci_user" {
-#   service_name = ovh_cloud_project_containerregistry.registry.service_name
-#   registry_id  = ovh_cloud_project_containerregistry.registry.id
-#   email        = "ci@example.com"
-#   login        = "ci-user"
-# }
+resource "ovh_cloud_project_containerregistry_user" "ci_user" {
+  service_name = ovh_cloud_project_containerregistry.registry.service_name
+  registry_id  = ovh_cloud_project_containerregistry.registry.id
+  email        = "max.verdom@gmail.com"
+  login        = "ci-user"
+}
