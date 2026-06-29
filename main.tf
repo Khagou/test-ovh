@@ -42,12 +42,11 @@ module "database" {
   flavor         = each.value.flavor
 }
 
-#module "registry" {
-#  for_each = { for r in local.registry.registries : r.name => r }
-#
-#  source       = "./modules/registry"
-#  service_name = var.service_name
-#  region       = local.region_short
-#  name         = each.value.name
-#  plan_id      = each.value.plan_id
-#}
+module "registry" {
+ for_each = { for r in local.registry.registries : r.name => r }
+
+ source                = "./modules/registry"
+ service_name          = var.service_name
+ region                = local.region_short
+ registry_name         = each.value.name
+}
