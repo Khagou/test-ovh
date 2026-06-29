@@ -4,6 +4,10 @@ terraform {
       source  = "ovh/ovh"
       version = "~> 0.46"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
 
   backend "s3" {
@@ -27,4 +31,11 @@ provider "ovh" {
   endpoint      = "ovh-eu"
   client_id     = var.ovh_client_id
   client_secret = var.ovh_client_secret
+}
+
+# Le kubeconfig est produit par le module kubernetes après création du cluster.
+# Premier apply : terraform apply -target=module.network -target=module.kubernetes -target=module.registry -target=module.database
+# Deuxième apply : terraform apply  (déploie l'app via ce provider)
+provider "kubernetes" {
+  config_raw = module.kubernetes["kube-cluster"].kubeconfig
 }

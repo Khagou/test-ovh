@@ -1,3 +1,3 @@
-FROM alpine:3.22
-
-CMD ["echo", "Hello OVH Registry"]
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+EXPOSE 80
