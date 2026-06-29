@@ -1,5 +1,6 @@
 stages:
   - validate
+  - plan
   - infra
   - docker
   - deploy
@@ -14,15 +15,13 @@ variables:
   AWS_ACCESS_KEY_ID:        $OVH_S3_ACCESS_KEY
   AWS_SECRET_ACCESS_KEY:    $OVH_S3_SECRET_KEY
 
-# L'image hashicorp/terraform a ENTRYPOINT=terraform.
-# GitLab CI essaie de lancer /bin/sh → ça donne "terraform sh" → erreur.
-# entrypoint: [""] force le shell standard à la place.
+# L'image hashicorp/terraform a ENTRYPOINT=terraform → GitLab CI ne peut pas
+# lancer /bin/sh. entrypoint: [""] rétablit le shell standard.
 .terraform-image: &terraform-image
   name: hashicorp/terraform:latest
   entrypoint: [""]
 
-# ─── VALIDATE ─────────────────────────────────────────────────────────────────
-# Tourne sur toutes les branches : vérifie la syntaxe et le schéma Terraform.
+# ─── VALIDATE (toutes les branches) ───────────────────────────────────────────
 
 terraform-validate:
   stage: validate
@@ -32,10 +31,25 @@ terraform-validate:
     - terraform fmt -check
     - terraform validate
 
-# ─── INFRA ────────────────────────────────────────────────────────────────────
+# ─── PLAN (toutes les branches) ───────────────────────────────────────────────
+# Sur dev  → preview de ce qui serait créé/modifié, rien n'est appliqué.
+# Sur main → preview avant l'apply automatique (stages suivants).
+# -target évite d'appeler le provider Kubernetes avant que le cluster existe.
+
+terraform-plan:
+  stage: plan
+  image: *terraform-image
+  script:
+    - terraform init
+    - |
+      terraform plan -no-color \
+        -target=module.network \
+        -target=module.kubernetes \
+        -target=module.registry \
+        -target=module.database
+
+# ─── INFRA (main uniquement) ──────────────────────────────────────────────────
 # Crée le réseau, le cluster Kubernetes, le registry et la BDD.
-# -target évite d'initialiser le provider Kubernetes avant que le cluster existe
-# (kubeconfig inconnu tant que le cluster n'est pas créé).
 
 terraform-infra:
   stage: infra
@@ -52,10 +66,8 @@ terraform-infra:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# ─── DOCKER ───────────────────────────────────────────────────────────────────
-# Lit les credentials du registry via terraform output (backend S3 partagé),
-# puis build et pousse l'image Nginx dans le registry OVH.
-# Utilise docker:dind comme service + docker-cli installé dans l'image Terraform.
+# ─── DOCKER (main uniquement) ─────────────────────────────────────────────────
+# Lit les credentials du registry via terraform output, build et push l'image.
 
 docker-build:
   stage: docker
@@ -84,9 +96,8 @@ docker-build:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# ─── DEPLOY ───────────────────────────────────────────────────────────────────
-# Déploie l'application sur Kubernetes via le provider Terraform.
-# Le cluster est créé (stage infra) et l'image disponible (stage docker).
+# ─── DEPLOY (main uniquement) ─────────────────────────────────────────────────
+# Déploie l'application sur Kubernetes. Cluster créé (infra) + image dispo (docker).
 
 terraform-deploy:
   stage: deploy
