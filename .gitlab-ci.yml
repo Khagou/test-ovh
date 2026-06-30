@@ -19,7 +19,10 @@ stages:
 variables:
   ENV:
     value: "dev"
-    description: "Environnement cible (dev, prd)"
+    description: "Environnement cible"
+    options:
+      - dev
+      - prd
   TF_VAR_ovh_client_id: $OVH_CLIENT_ID
   TF_VAR_ovh_client_secret: $OVH_CLIENT_SECRET
   TF_VAR_service_name: $OVH_SERVICE_NAME
