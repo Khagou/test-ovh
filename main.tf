@@ -49,4 +49,6 @@ module "registry" {
   service_name  = var.service_name
   region        = local.region_short
   registry_name = each.value.name
+  login         = each.value.login
+  email         = each.value.email
 }

@@ -1,4 +1,5 @@
 registries:
   - name: registry
-    # Récupérer les plan_id via :
-    # GET https://api.ovh.com/v1/cloud/project/{service_name}/capabilities/containerRegistry
+    registry_plan: SMALL
+    login: ci-user
+    email: max.verdom@gmail.com
