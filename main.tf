@@ -1,11 +1,11 @@
 locals {
   region_short = regex("^[A-Za-z]+", var.region)
 
-  network    = yamldecode(file("${path.module}/data/network.yaml"))
-  kubernetes = yamldecode(file("${path.module}/data/kubernetes.yaml"))
-  database   = yamldecode(file("${path.module}/data/database.yaml"))
-  registry   = yamldecode(file("${path.module}/data/registry.yaml"))
-  app        = yamldecode(file("${path.module}/data/app.yaml"))
+  network    = yamldecode(file("${path.module}/data/${var.env}/network.yaml"))
+  kubernetes = yamldecode(file("${path.module}/data/${var.env}/kubernetes.yaml"))
+  database   = yamldecode(file("${path.module}/data/${var.env}/database.yaml"))
+  registry   = yamldecode(file("${path.module}/data/${var.env}/registry.yaml"))
+  app        = yamldecode(file("${path.module}/data/${var.env}/app.yaml"))
 
   # Parsing du kubeconfig pour configurer le provider Kubernetes.
   # La valeur est "unknown" lors de terraform validate (cluster pas encore créé),

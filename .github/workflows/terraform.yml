@@ -1,15 +1,29 @@
 name: DevOps Pipeline
 
 on:
-  push:
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environnement cible"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prd
+      action:
+        description: "Action Terraform"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+        default: plan
 
-# Variables d'environnement communes aux jobs Terraform
 env:
   TF_VAR_ovh_client_id: ${{ secrets.OVH_CLIENT_ID }}
   TF_VAR_ovh_client_secret: ${{ secrets.OVH_CLIENT_SECRET }}
   TF_VAR_service_name: ${{ secrets.OVH_SERVICE_NAME }}
+  TF_VAR_env: ${{ inputs.env }}
   AWS_ACCESS_KEY_ID: ${{ secrets.OVH_S3_ACCESS_KEY }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.OVH_S3_SECRET_KEY }}
 
@@ -21,7 +35,7 @@ jobs:
   # le cluster existe (kubeconfig inconnu lors du premier plan).
   # ──────────────────────────────────────────────────────────────────────────
   terraform-infra:
-    name: "Terraform – Infrastructure"
+    name: "Terraform – Infrastructure (${{ inputs.env }})"
     runs-on: ubuntu-latest
 
     steps:
@@ -31,10 +45,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_wrapper: false   # nécessaire pour lire terraform output proprement
+          terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="key=ovh/${{ inputs.env }}/terraform.tfstate"
 
       - name: Terraform Format Check
         run: terraform fmt -check
@@ -51,7 +65,7 @@ jobs:
             -target=module.database
 
       - name: Terraform Apply (infra uniquement)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: inputs.action == 'apply'
         run: terraform apply -no-color -auto-approve tfplan
 
   # ──────────────────────────────────────────────────────────────────────────
@@ -59,10 +73,10 @@ jobs:
   # Lit les credentials directement via terraform output (backend S3 partagé).
   # ──────────────────────────────────────────────────────────────────────────
   docker:
-    name: "Docker – Build & Push"
+    name: "Docker – Build & Push (${{ inputs.env }})"
     runs-on: ubuntu-latest
     needs: terraform-infra
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: inputs.action == 'apply'
 
     steps:
       - name: Checkout
@@ -74,22 +88,17 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="key=ovh/${{ inputs.env }}/terraform.tfstate"
 
       - name: Lire les outputs du registry
         id: registry
         run: |
           REGISTRY_URL=$(terraform output -raw registry_url)
-          REGISTRY_USER=$(terraform output -raw registry_login)
-          REGISTRY_PASSWORD=$(terraform output -raw registry_password)
-
-          # Supprimer le schéma https:// — Docker n'accepte pas de protocole dans les tags/registry
           REGISTRY_HOST="${REGISTRY_URL#https://}"
           REGISTRY_HOST="${REGISTRY_HOST#http://}"
-
-          # Masquer le mot de passe dans les logs
+          REGISTRY_USER=$(terraform output -raw registry_login)
+          REGISTRY_PASSWORD=$(terraform output -raw registry_password)
           echo "::add-mask::$REGISTRY_PASSWORD"
-
           echo "host=$REGISTRY_HOST"         >> "$GITHUB_OUTPUT"
           echo "user=$REGISTRY_USER"         >> "$GITHUB_OUTPUT"
           echo "password=$REGISTRY_PASSWORD" >> "$GITHUB_OUTPUT"
@@ -113,10 +122,10 @@ jobs:
   # Le cluster est maintenant créé (job 1) et l'image disponible (job 2).
   # ──────────────────────────────────────────────────────────────────────────
   terraform-app:
-    name: "Terraform – App Deployment"
+    name: "Terraform – App Deployment (${{ inputs.env }})"
     runs-on: ubuntu-latest
     needs: docker
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: inputs.action == 'apply'
 
     steps:
       - name: Checkout
@@ -128,7 +137,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="key=ovh/${{ inputs.env }}/terraform.tfstate"
 
       - name: Terraform Plan (déploiement app)
         run: terraform plan -no-color -out=tfplan
