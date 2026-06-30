@@ -20,6 +20,6 @@ variable "region" {
 }
 
 variable "env" {
-  type = string
+  type        = string
   description = "Environnement de déploiement"
 }
