@@ -5,6 +5,17 @@ locals {
   kubernetes = yamldecode(file("${path.module}/data/kubernetes.yaml"))
   database   = yamldecode(file("${path.module}/data/database.yaml"))
   registry   = yamldecode(file("${path.module}/data/registry.yaml"))
+  app        = yamldecode(file("${path.module}/data/app.yaml"))
+
+  # Parsing du kubeconfig pour configurer le provider Kubernetes.
+  # La valeur est "unknown" lors de terraform validate (cluster pas encore créé),
+  # ce qui est acceptable — Terraform vérifie le schéma, pas les valeurs.
+  _kube_raw = module.kubernetes["kube-cluster"].kubeconfig
+  _kube     = yamldecode(local._kube_raw)
+
+  # L'URL OVH inclut "https://" mais Docker n'accepte pas de protocole dans les tags.
+  registry_url_full = module.registry["registry"].url
+  registry_host     = replace(local.registry_url_full, "https://", "")
 }
 
 module "network" {
@@ -51,4 +62,18 @@ module "registry" {
   registry_name = each.value.name
   login         = each.value.login
   email         = each.value.email
+}
+
+module "app" {
+  source = "./modules/app"
+
+  app_name          = local.app.name
+  image             = "${local.registry_host}/${local.app.harbor_project}/${local.app.name}:latest"
+  replicas          = local.app.replicas
+  port              = local.app.port
+  registry_url      = local.registry_host
+  registry_username = module.registry["registry"].user
+  registry_password = module.registry["registry"].password
+
+  depends_on = [module.kubernetes]
 }
