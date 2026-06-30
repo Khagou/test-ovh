@@ -76,7 +76,10 @@ terraform-infra:
         -target=module.registry \
         -target=module.database
     - terraform apply -no-color -auto-approve tfplan
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: never
 
 # ─── DOCKER (bouton manuel) ───────────────────────────────────────────────────
 
@@ -104,7 +107,10 @@ docker-build:
       echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" -u "$REGISTRY_USER" --password-stdin
       docker build -t "$REGISTRY_HOST/library/myapp:latest" .
       docker push "$REGISTRY_HOST/library/myapp:latest"
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: never
 
 # ─── DEPLOY (bouton manuel) ───────────────────────────────────────────────────
 
@@ -116,4 +122,7 @@ terraform-deploy:
     - terraform plan -no-color -out=tfplan
     - terraform apply -no-color -auto-approve tfplan
     - terraform output -raw app_url
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+    - when: never
