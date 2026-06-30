@@ -1,0 +1,6 @@
+databases:
+  - name: postgresql-prd
+    engine: postgresql
+    version: "16"
+    plan: essential
+    flavor: db1-4

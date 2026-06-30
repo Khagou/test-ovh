@@ -1,0 +1,5 @@
+registries:
+  - name: registry-prd
+    registry_plan: SMALL
+    login: ci-user
+    email: max.verdom@gmail.com
