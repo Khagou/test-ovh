@@ -18,3 +18,8 @@ variable "region" {
   default     = "GRA9"
   description = "Région OVH Public Cloud (ex: GRA9, SBG5)"
 }
+
+variable "env" {
+  type        = string
+  description = "Environnement de déploiement"
+}

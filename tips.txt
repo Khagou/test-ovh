@@ -15,7 +15,7 @@ Registry:
 3.Le user permet de se co via docker et à l'interface harbor dans la console OVH
 
 Bucket:
-1.Need un user OVH
+1.Need un user OVH lié au bucket
 2.Récupérer la clé d'accès et la clé secrète à la création du user
 3.Passer les clés récupérées dans les variables:
     AWS_ACCESS_KEY_ID="clé d'accès"

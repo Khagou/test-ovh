@@ -17,3 +17,13 @@ variable "registry_plan" {
   description = "Taille du registry"
   default = "SMALL"
 }
+
+variable "email" {
+  type = string
+  description = "email du user"
+}
+
+variable "login" {
+  type = string
+  description = "login du user"
+}

@@ -1,11 +1,11 @@
 locals {
   region_short = regex("^[A-Za-z]+", var.region)
 
-  network    = yamldecode(file("${path.module}/data/network.yaml"))
-  kubernetes = yamldecode(file("${path.module}/data/kubernetes.yaml"))
-  database   = yamldecode(file("${path.module}/data/database.yaml"))
-  registry   = yamldecode(file("${path.module}/data/registry.yaml"))
-  app        = yamldecode(file("${path.module}/data/app.yaml"))
+  network    = yamldecode(file("${path.module}/data/${var.env}/network.yaml"))
+  kubernetes = yamldecode(file("${path.module}/data/${var.env}/kubernetes.yaml"))
+  database   = yamldecode(file("${path.module}/data/${var.env}/database.yaml"))
+  registry   = yamldecode(file("${path.module}/data/${var.env}/registry.yaml"))
+  app        = yamldecode(file("${path.module}/data/${var.env}/app.yaml"))
 
   # Parsing du kubeconfig pour configurer le provider Kubernetes.
   # La valeur est "unknown" lors de terraform validate (cluster pas encore créé),
@@ -60,18 +60,21 @@ module "registry" {
   service_name  = var.service_name
   region        = local.region_short
   registry_name = each.value.name
+  registry_plan = each.value.registry_plan
+  login         = each.value.login
+  email         = each.value.email
 }
 
-module "app" {
-  source = "./modules/app"
+# module "app" {
+#   source = "./modules/app"
 
-  app_name          = local.app.name
-  image             = "${local.registry_host}/${local.app.harbor_project}/${local.app.name}:latest"
-  replicas          = local.app.replicas
-  port              = local.app.port
-  registry_url      = local.registry_host
-  registry_username = module.registry["registry"].user
-  registry_password = module.registry["registry"].password
+#   app_name          = local.app.name
+#   image             = "${local.registry_host}/${local.app.harbor_project}/${local.app.name}:latest"
+#   replicas          = local.app.replicas
+#   port              = local.app.port
+#   registry_url      = local.registry_host
+#   registry_username = module.registry["registry"].user
+#   registry_password = module.registry["registry"].password
 
-  depends_on = [module.kubernetes]
-}
+#   depends_on = [module.kubernetes]
+# }

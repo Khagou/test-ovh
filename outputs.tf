@@ -50,7 +50,7 @@ output "registry_password" {
   description = "Mot de passe du CI user sur le registry"
 }
 
-output "app_url" {
-  value       = "http://${module.app.load_balancer_ip}"
-  description = "URL publique de l'application déployée sur Kubernetes"
-}
+# output "app_url" {
+#   value       = "http://${module.app.load_balancer_ip}"
+#   description = "URL publique de l'application déployée sur Kubernetes"
+# }

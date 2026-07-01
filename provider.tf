@@ -12,7 +12,6 @@ terraform {
 
   backend "s3" {
     bucket = "test-tfstate"
-    key    = "ovh/terraform.tfstate"
     region = "eu-west-par"
 
     endpoints = {

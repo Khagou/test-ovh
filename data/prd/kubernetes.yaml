@@ -1,0 +1,5 @@
+clusters:
+  - name: kube-cluster-prd
+    node_flavor: b3-8
+    min_nodes: 1
+    max_nodes: 3

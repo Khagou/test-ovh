@@ -1,5 +1,5 @@
 databases:
-  - name: postgresql
+  - name: postgresql-dev
     engine: postgresql
     version: "16"
     plan: essential

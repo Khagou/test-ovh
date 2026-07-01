@@ -1,15 +1,29 @@
 name: DevOps Pipeline
 
 on:
-  push:
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environnement cible"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prd
+      action:
+        description: "Action Terraform"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+        default: plan
 
-# Variables d'environnement communes aux jobs Terraform
 env:
   TF_VAR_ovh_client_id: ${{ secrets.OVH_CLIENT_ID }}
   TF_VAR_ovh_client_secret: ${{ secrets.OVH_CLIENT_SECRET }}
   TF_VAR_service_name: ${{ secrets.OVH_SERVICE_NAME }}
+  TF_VAR_env: ${{ inputs.env }}
   AWS_ACCESS_KEY_ID: ${{ secrets.OVH_S3_ACCESS_KEY }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.OVH_S3_SECRET_KEY }}
 
@@ -21,7 +35,7 @@ jobs:
   # le cluster existe (kubeconfig inconnu lors du premier plan).
   # ──────────────────────────────────────────────────────────────────────────
   terraform-infra:
-    name: "Terraform – Infrastructure"
+    name: "Terraform – Infrastructure (${{ inputs.env }})"
     runs-on: ubuntu-latest
 
     steps:
@@ -31,10 +45,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_wrapper: false   # nécessaire pour lire terraform output proprement
+          terraform_wrapper: false
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="key=ovh/${{ inputs.env }}/terraform.tfstate"
 
       - name: Terraform Format Check
         run: terraform fmt -check
@@ -51,90 +65,86 @@ jobs:
             -target=module.database
 
       - name: Terraform Apply (infra uniquement)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: inputs.action == 'apply'
         run: terraform apply -no-color -auto-approve tfplan
 
   # ──────────────────────────────────────────────────────────────────────────
   # Job 2 : Build l'image Docker et la pousse dans le registry OVH.
   # Lit les credentials directement via terraform output (backend S3 partagé).
   # ──────────────────────────────────────────────────────────────────────────
-  docker:
-    name: "Docker – Build & Push"
-    runs-on: ubuntu-latest
-    needs: terraform-infra
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # docker:
+  #   name: "Docker – Build & Push (${{ inputs.env }})"
+  #   runs-on: ubuntu-latest
+  #   needs: terraform-infra
+  #   if: inputs.action == 'apply'
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_wrapper: false
 
-      - name: Terraform Init
-        run: terraform init
+  #     - name: Terraform Init
+  #       run: terraform init -backend-config="key=ovh/${{ inputs.env }}/terraform.tfstate"
 
-      - name: Lire les outputs du registry
-        id: registry
-        run: |
-          REGISTRY_URL=$(terraform output -raw registry_url)
-          REGISTRY_USER=$(terraform output -raw registry_login)
-          REGISTRY_PASSWORD=$(terraform output -raw registry_password)
+  #     - name: Lire les outputs du registry
+  #       id: registry
+  #       run: |
+  #         REGISTRY_URL=$(terraform output -raw registry_url)
+  #         REGISTRY_HOST="${REGISTRY_URL#https://}"
+  #         REGISTRY_HOST="${REGISTRY_HOST#http://}"
+  #         REGISTRY_USER=$(terraform output -raw registry_login)
+  #         REGISTRY_PASSWORD=$(terraform output -raw registry_password)
+  #         echo "::add-mask::$REGISTRY_PASSWORD"
+  #         echo "host=$REGISTRY_HOST"         >> "$GITHUB_OUTPUT"
+  #         echo "user=$REGISTRY_USER"         >> "$GITHUB_OUTPUT"
+  #         echo "password=$REGISTRY_PASSWORD" >> "$GITHUB_OUTPUT"
 
-          # Supprimer le schéma https:// — Docker n'accepte pas de protocole dans les tags/registry
-          REGISTRY_HOST="${REGISTRY_URL#https://}"
-          REGISTRY_HOST="${REGISTRY_HOST#http://}"
+  #     - name: Docker Login
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ${{ steps.registry.outputs.host }}
+  #         username: ${{ steps.registry.outputs.user }}
+  #         password: ${{ steps.registry.outputs.password }}
 
-          # Masquer le mot de passe dans les logs
-          echo "::add-mask::$REGISTRY_PASSWORD"
+  #     - name: Build & Push
+  #       uses: docker/build-push-action@v6
+  #       with:
+  #         context: .
+  #         push: true
+  #         tags: ${{ steps.registry.outputs.host }}/library/myapp:latest
 
-          echo "host=$REGISTRY_HOST"         >> "$GITHUB_OUTPUT"
-          echo "user=$REGISTRY_USER"         >> "$GITHUB_OUTPUT"
-          echo "password=$REGISTRY_PASSWORD" >> "$GITHUB_OUTPUT"
+  # # ──────────────────────────────────────────────────────────────────────────
+  # # Job 3 : Déploie l'application sur Kubernetes via le provider Terraform.
+  # # Le cluster est maintenant créé (job 1) et l'image disponible (job 2).
+  # # ──────────────────────────────────────────────────────────────────────────
+  # terraform-app:
+  #   name: "Terraform – App Deployment (${{ inputs.env }})"
+  #   runs-on: ubuntu-latest
+  #   needs: docker
+  #   if: inputs.action == 'apply'
 
-      - name: Docker Login
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.registry.outputs.host }}
-          username: ${{ steps.registry.outputs.user }}
-          password: ${{ steps.registry.outputs.password }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Build & Push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.registry.outputs.host }}/library/myapp:latest
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_wrapper: false
+  #     - name: terraform check
+  #       run: terraform version
+  #     - name: Terraform Init
+  #       run: terraform init -backend-config="key=ovh/${{ inputs.env }}/terraform.tfstate"
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # Job 3 : Déploie l'application sur Kubernetes via le provider Terraform.
-  # Le cluster est maintenant créé (job 1) et l'image disponible (job 2).
-  # ──────────────────────────────────────────────────────────────────────────
-  terraform-app:
-    name: "Terraform – App Deployment"
-    runs-on: ubuntu-latest
-    needs: docker
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #     - name: Terraform Plan (déploiement app)
+  #       run: terraform plan -no-color -out=tfplan
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #     - name: Terraform Apply (déploiement app)
+  #       run: terraform apply -no-color -auto-approve tfplan
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Plan (déploiement app)
-        run: terraform plan -no-color -out=tfplan
-
-      - name: Terraform Apply (déploiement app)
-        run: terraform apply -no-color -auto-approve tfplan
-
-      - name: Afficher l'URL de l'application
-        run: terraform output -raw app_url
+  #     - name: Afficher l'URL de l'application
+  #       run: terraform output -raw app_url

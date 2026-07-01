@@ -8,11 +8,12 @@ resource "ovh_cloud_project_containerregistry" "registry" {
   plan_id      = data.ovh_cloud_project_capabilities_containerregistry_filter.regcap.id
   region       = data.ovh_cloud_project_capabilities_containerregistry_filter.regcap.region
   name         = var.registry_name
+
 }
 
 resource "ovh_cloud_project_containerregistry_user" "ci_user" {
   service_name = ovh_cloud_project_containerregistry.registry.service_name
   registry_id  = ovh_cloud_project_containerregistry.registry.id
-  email        = "max.verdom@gmail.com"
-  login        = "ci-user"
+  email        = var.email
+  login        = var.login
 }
