@@ -2,7 +2,7 @@ terraform {
   required_providers {
     ovh = {
       source  = "ovh/ovh"
-      version = "~> 0.46"
+      version = ">= 0.46.0, < 0.50.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
