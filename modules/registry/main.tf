@@ -8,6 +8,12 @@ resource "ovh_cloud_project_containerregistry" "registry" {
   plan_id      = data.ovh_cloud_project_capabilities_containerregistry_filter.regcap.id
   region       = data.ovh_cloud_project_capabilities_containerregistry_filter.regcap.region
   name         = var.registry_name
+
+  timeouts {
+    create = "10m"
+    delete = "10m"
+    update = "10m"
+  }
 }
 
 resource "ovh_cloud_project_containerregistry_user" "ci_user" {

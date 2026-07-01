@@ -70,11 +70,11 @@ terraform-infra:
   <<: *tf-init
   script:
     - |
-      terraform plan -no-color -out=tfplan \
-        -target=module.network \
-        -target=module.kubernetes \
-        -target=module.registry \
-        -target=module.database
+      terraform plan -no-color -out=tfplan
+        # -target=module.network \
+        # -target=module.kubernetes \
+        # -target=module.registry \
+        # -target=module.database
     - terraform apply -no-color -auto-approve tfplan
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -83,46 +83,46 @@ terraform-infra:
 
 # ─── DOCKER (bouton manuel) ───────────────────────────────────────────────────
 
-docker-build:
-  stage: docker
-  image: *terraform-image
-  services:
-    - name: docker:dind
-      alias: docker
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: /certs
-    DOCKER_TLS_VERIFY: "1"
-    DOCKER_CERT_PATH: /certs/client
-  before_script:
-    - apk add --no-cache docker-cli
-    - terraform init -backend-config="key=ovh/$ENV/terraform.tfstate"
-  script:
-    - |
-      REGISTRY_URL=$(terraform output -raw registry_url)
-      REGISTRY_HOST="${REGISTRY_URL#https://}"
-      REGISTRY_HOST="${REGISTRY_HOST#http://}"
-      REGISTRY_USER=$(terraform output -raw registry_login)
-      REGISTRY_PASSWORD=$(terraform output -raw registry_password)
-      echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" -u "$REGISTRY_USER" --password-stdin
-      docker build -t "$REGISTRY_HOST/library/myapp:latest" .
-      docker push "$REGISTRY_HOST/library/myapp:latest"
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-    - when: never
+# docker-build:
+#   stage: docker
+#   image: *terraform-image
+#   services:
+#     - name: docker:dind
+#       alias: docker
+#   variables:
+#     DOCKER_HOST: tcp://docker:2376
+#     DOCKER_TLS_CERTDIR: /certs
+#     DOCKER_TLS_VERIFY: "1"
+#     DOCKER_CERT_PATH: /certs/client
+#   before_script:
+#     - apk add --no-cache docker-cli
+#     - terraform init -backend-config="key=ovh/$ENV/terraform.tfstate"
+#   script:
+#     - |
+#       REGISTRY_URL=$(terraform output -raw registry_url)
+#       REGISTRY_HOST="${REGISTRY_URL#https://}"
+#       REGISTRY_HOST="${REGISTRY_HOST#http://}"
+#       REGISTRY_USER=$(terraform output -raw registry_login)
+#       REGISTRY_PASSWORD=$(terraform output -raw registry_password)
+#       echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_HOST" -u "$REGISTRY_USER" --password-stdin
+#       docker build -t "$REGISTRY_HOST/library/myapp:latest" .
+#       docker push "$REGISTRY_HOST/library/myapp:latest"
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#       when: manual
+#     - when: never
 
-# ─── DEPLOY (bouton manuel) ───────────────────────────────────────────────────
+# # ─── DEPLOY (bouton manuel) ───────────────────────────────────────────────────
 
-terraform-deploy:
-  stage: deploy
-  image: *terraform-image
-  <<: *tf-init
-  script:
-    - terraform plan -no-color -out=tfplan
-    - terraform apply -no-color -auto-approve tfplan
-    - terraform output -raw app_url
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
-    - when: never
+# terraform-deploy:
+#   stage: deploy
+#   image: *terraform-image
+#   <<: *tf-init
+#   script:
+#     - terraform plan -no-color -out=tfplan
+#     - terraform apply -no-color -auto-approve tfplan
+#     - terraform output -raw app_url
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#       when: manual
+#     - when: never
