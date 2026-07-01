@@ -45,6 +45,7 @@ terraform-validate:
   image: *terraform-image
   <<: *tf-init
   script:
+    - terraform version
     - terraform fmt -check
     - terraform validate
 
@@ -70,11 +71,11 @@ terraform-infra:
   <<: *tf-init
   script:
     - |
-      terraform plan -no-color -out=tfplan
-        # -target=module.network \
-        # -target=module.kubernetes \
-        # -target=module.registry \
-        # -target=module.database
+      terraform plan -no-color -out=tfplan \
+        -target=module.network \
+        -target=module.kubernetes \
+        -target=module.registry \
+        -target=module.database
     - terraform apply -no-color -auto-approve tfplan
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
