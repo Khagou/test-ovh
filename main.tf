@@ -65,16 +65,16 @@ module "registry" {
   email         = each.value.email
 }
 
-module "app" {
-  source = "./modules/app"
+# module "app" {
+#   source = "./modules/app"
 
-  app_name          = local.app.name
-  image             = "${local.registry_host}/${local.app.harbor_project}/${local.app.name}:latest"
-  replicas          = local.app.replicas
-  port              = local.app.port
-  registry_url      = local.registry_host
-  registry_username = module.registry["registry"].user
-  registry_password = module.registry["registry"].password
+#   app_name          = local.app.name
+#   image             = "${local.registry_host}/${local.app.harbor_project}/${local.app.name}:latest"
+#   replicas          = local.app.replicas
+#   port              = local.app.port
+#   registry_url      = local.registry_host
+#   registry_username = module.registry["registry"].user
+#   registry_password = module.registry["registry"].password
 
-  depends_on = [module.kubernetes]
-}
+#   depends_on = [module.kubernetes]
+# }
